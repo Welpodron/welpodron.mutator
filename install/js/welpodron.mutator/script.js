@@ -1,34 +1,40 @@
 "use strict";
 (() => {
+    if (window.welpodron == null) {
+        window.welpodron = {};
+    }
+    if (window.welpodron.mutator) {
+        return;
+    }
     class Mutator {
         supportedActions = ["load"];
         element;
-        controls;
-        loading = false;
+        isLoading = false;
         data;
         constructor({ element, config = {} }) {
             this.element = element;
             this.data = new FormData();
-            if (config.controls) {
-                this.controls = config.controls;
-            }
-            else {
-                this.controls = [
-                    ...document.querySelectorAll(`[data-mutator-action][data-mutator-id="${this.element.dataset.mutatorId}"]`),
-                ].filter((element) => element !== this.element);
-            }
-            this.controls.forEach((control) => {
-                control.removeEventListener("click", this.handleControlClick);
-                control.addEventListener("click", this.handleControlClick);
-            });
+            document.removeEventListener("click", this.handleDocumentClick);
+            document.addEventListener("click", this.handleDocumentClick);
         }
-        handleControlClick = (event) => {
-            event.preventDefault();
-            const { currentTarget } = event;
-            const action = currentTarget.getAttribute("data-mutator-action");
-            const actionArgs = currentTarget.getAttribute("data-mutator-action-args");
-            if (!this.supportedActions.includes(action))
+        handleDocumentClick = (event) => {
+            let { target } = event;
+            if (!target) {
                 return;
+            }
+            target = target.closest(`[data-w-mutator-id="${this.element.getAttribute("data-w-mutator-id")}"][data-w-mutator-action-args][data-w-mutator-action][data-w-mutator-control]`);
+            if (!target) {
+                return;
+            }
+            const action = target.getAttribute("data-w-mutator-action");
+            const actionArgs = target.getAttribute("data-w-mutator-action-args");
+            const actionFlush = target.getAttribute("data-w-mutator-action-flush");
+            if (!actionFlush) {
+                event.preventDefault();
+            }
+            if (!this.supportedActions.includes(action)) {
+                return;
+            }
             const actionFunc = this[action];
             if (actionFunc instanceof Function)
                 return actionFunc({
@@ -73,9 +79,9 @@
                 event.preventDefault();
                 return;
             }
-            if (this.loading)
+            if (this.isLoading)
                 return;
-            this.loading = true;
+            this.isLoading = true;
             this.data = new FormData();
             if (this.element.dataset.mutatorId) {
                 this.data.set("from", this.element.dataset.mutatorId);
@@ -91,7 +97,7 @@
                 },
             });
             if (!this.element.dispatchEvent(dispatchedEvent)) {
-                this.loading = false;
+                this.isLoading = false;
                 let dispatchedEvent = new CustomEvent("welpodron.mutator:load:after", {
                     bubbles: false,
                     cancelable: false,
@@ -131,7 +137,7 @@
                 console.error(error);
             }
             finally {
-                this.loading = false;
+                this.isLoading = false;
                 let dispatchedEvent = new CustomEvent("welpodron.mutator:load:after", {
                     bubbles: false,
                     cancelable: false,
@@ -142,9 +148,6 @@
                 this.element.dispatchEvent(dispatchedEvent);
             }
         };
-    }
-    if (window.welpodron == null) {
-        window.welpodron = {};
     }
     window.welpodron.mutator = Mutator;
 })();
