@@ -1,7 +1,13 @@
 (() => {
-  type MutatorConfigType = {
-    controls?: HTMLElement[];
-  };
+  if ((window as any).welpodron == null) {
+    (window as any).welpodron = {};
+  }
+
+  if ((window as any).welpodron.mutator) {
+    return;
+  }
+
+  type MutatorConfigType = {};
 
   type MutatorPropsType = {
     element: HTMLElement;
@@ -22,9 +28,9 @@
     supportedActions = ["load"];
 
     element: HTMLElement;
-    controls: HTMLElement[];
 
-    loading = false;
+    isLoading = false;
+
     data: FormData;
 
     constructor({ element, config = {} }: MutatorPropsType) {
@@ -32,34 +38,46 @@
 
       this.data = new FormData();
 
-      if (config.controls) {
-        this.controls = config.controls;
-      } else {
-        this.controls = [
-          ...document.querySelectorAll(
-            `[data-mutator-action][data-mutator-id="${this.element.dataset.mutatorId}"]`
-          ),
-        ].filter((element) => element !== this.element) as HTMLElement[];
-      }
-
-      this.controls.forEach((control) => {
-        control.removeEventListener("click", this.handleControlClick);
-        control.addEventListener("click", this.handleControlClick);
-      });
+      document.removeEventListener("click", this.handleDocumentClick);
+      document.addEventListener("click", this.handleDocumentClick);
     }
 
-    handleControlClick = (event: MouseEvent) => {
-      event.preventDefault();
+    handleDocumentClick = (event: MouseEvent) => {
+      let { target } = event;
 
-      const { currentTarget } = event;
-      const action = (currentTarget as Element).getAttribute(
-        "data-mutator-action"
-      ) as keyof this;
-      const actionArgs = (currentTarget as Element).getAttribute(
-        "data-mutator-action-args"
+      if (!target) {
+        return;
+      }
+
+      target = (target as Element).closest(
+        `[data-w-mutator-id="${this.element.getAttribute(
+          "data-w-mutator-id"
+        )}"][data-w-mutator-action-args][data-w-mutator-action][data-w-mutator-control]`
       );
 
-      if (!this.supportedActions.includes(action as string)) return;
+      if (!target) {
+        return;
+      }
+
+      const action = (target as Element).getAttribute(
+        "data-w-mutator-action"
+      ) as keyof this;
+
+      const actionArgs = (target as Element).getAttribute(
+        "data-w-mutator-action-args"
+      );
+
+      const actionFlush = (target as Element).getAttribute(
+        "data-w-mutator-action-flush"
+      );
+
+      if (!actionFlush) {
+        event.preventDefault();
+      }
+
+      if (!this.supportedActions.includes(action as string)) {
+        return;
+      }
 
       const actionFunc = this[action] as any;
 
@@ -121,9 +139,9 @@
         return;
       }
 
-      if (this.loading) return;
+      if (this.isLoading) return;
 
-      this.loading = true;
+      this.isLoading = true;
 
       this.data = new FormData();
 
@@ -144,7 +162,7 @@
       });
 
       if (!this.element.dispatchEvent(dispatchedEvent)) {
-        this.loading = false;
+        this.isLoading = false;
 
         let dispatchedEvent = new CustomEvent("welpodron.mutator:load:after", {
           bubbles: false,
@@ -191,7 +209,7 @@
       } catch (error) {
         console.error(error);
       } finally {
-        this.loading = false;
+        this.isLoading = false;
 
         let dispatchedEvent = new CustomEvent("welpodron.mutator:load:after", {
           bubbles: false,
@@ -204,10 +222,6 @@
         this.element.dispatchEvent(dispatchedEvent);
       }
     };
-  }
-
-  if ((window as any).welpodron == null) {
-    (window as any).welpodron = {};
   }
 
   (window as any).welpodron.mutator = Mutator;
