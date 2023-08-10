@@ -3,10 +3,42 @@
 use Bitrix\Main\ModuleManager;
 use Bitrix\Main\Application;
 use Bitrix\Main\IO\Directory;
+use Bitrix\Main\Loader;
+use Bitrix\Main\Config\Option;
+use Bitrix\Main\Service\GeoIp\Manager;
 
 class welpodron_mutator extends CModule
 {
     var $MODULE_ID = 'welpodron.mutator';
+    private $DEFAULT_OPTIONS = [];
+
+    public function InstallOptions()
+    {
+        global $APPLICATION;
+
+        try {
+            foreach ($this->DEFAULT_OPTIONS as $optionName => $optionValue) {
+                Option::set($this->MODULE_ID, $optionName, $optionValue);
+            }
+        } catch (\Throwable $th) {
+            $APPLICATION->ThrowException($th->getMessage() . '\n' . $th->getTraceAsString());
+            return false;
+        }
+        return true;
+    }
+
+    public function UnInstallOptions()
+    {
+        global $APPLICATION;
+
+        try {
+            Option::delete($this->MODULE_ID);
+        } catch (\Throwable $th) {
+            $APPLICATION->ThrowException($th->getMessage() . '\n' . $th->getTraceAsString());
+            return false;
+        }
+        return true;
+    }
 
     public function InstallFiles()
     {
@@ -39,7 +71,16 @@ class welpodron_mutator extends CModule
             return false;
         }
 
+        if (!Loader::includeModule('welpodron.core')) {
+            $APPLICATION->ThrowException('Модуль welpodron.core не был найден');
+            return false;
+        }
+
         if (!$this->InstallFiles()) {
+            return false;
+        }
+
+        if (!$this->InstallOptions()) {
             return false;
         }
 
@@ -53,6 +94,7 @@ class welpodron_mutator extends CModule
         global $APPLICATION;
 
         $this->UnInstallFiles();
+        $this->UnInstallOptions();
 
         ModuleManager::unRegisterModule($this->MODULE_ID);
         $APPLICATION->IncludeAdminFile('Деинсталляция модуля ' . $this->MODULE_ID, __DIR__ . '/unstep.php');
@@ -66,10 +108,11 @@ class welpodron_mutator extends CModule
         $this->PARTNER_NAME = 'Welpodron';
         $this->PARTNER_URI = 'https://github.com/Welpodron';
 
-        $arModuleVersion = [];
-        include(__DIR__ . "/version.php");
+        $this->MODULE_VERSION = '1.0.0';
 
-        $this->MODULE_VERSION = $arModuleVersion["VERSION"];
-        $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
+        $this->DEFAULT_OPTIONS = [
+            'KEY' => md5(Manager::getRealIp() . bitrix_sessid()),
+            'USE_RESTRICTIONS_DIRECTORY' => 'N'
+        ];
     }
 }

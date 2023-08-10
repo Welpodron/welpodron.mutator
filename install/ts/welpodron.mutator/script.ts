@@ -1,228 +1,234 @@
 (() => {
-  if ((window as any).welpodron == null) {
-    (window as any).welpodron = {};
-  }
-
-  if ((window as any).welpodron.mutator) {
-    return;
-  }
-
-  type MutatorConfigType = {};
-
-  type MutatorPropsType = {
-    element: HTMLElement;
-    config?: MutatorConfigType;
-  };
-
-  type _BitrixResponse = {
-    data: any;
-    status: "success" | "error";
-    errors: {
-      code: string;
-      message: string;
-      customData: string;
-    }[];
-  };
-
-  class Mutator {
-    supportedActions = ["load"];
-
-    element: HTMLElement;
-
-    isLoading = false;
-
-    data: FormData;
-
-    constructor({ element, config = {} }: MutatorPropsType) {
-      this.element = element;
-
-      this.data = new FormData();
-
-      document.removeEventListener("click", this.handleDocumentClick);
-      document.addEventListener("click", this.handleDocumentClick);
+  if ((window as any).welpodron && (window as any).welpodron.templater) {
+    if ((window as any).welpodron.mutator) {
+      return;
     }
 
-    handleDocumentClick = (event: MouseEvent) => {
-      let { target } = event;
+    const MODULE_BASE = "mutator";
 
-      if (!target) {
-        return;
-      }
+    const EVENT_LOAD_BEFORE = `welpodron.${MODULE_BASE}:load:before`;
+    const EVENT_LOAD_AFTER = `welpodron.${MODULE_BASE}:load:after`;
 
-      target = (target as Element).closest(
-        `[data-w-mutator-id="${this.element.getAttribute(
-          "data-w-mutator-id"
-        )}"][data-w-mutator-action-args][data-w-mutator-action][data-w-mutator-control]`
-      );
+    const ATTRIBUTE_BASE = `data-w-${MODULE_BASE}`;
+    const ATTRIBUTE_BASE_ID = `${ATTRIBUTE_BASE}-id`;
+    const ATTRIBUTE_CONTROL = `${ATTRIBUTE_BASE}-control`;
+    const ATTRIBUTE_ACTION = `${ATTRIBUTE_BASE}-action`;
+    const ATTRIBUTE_ACTION_ARGS = `${ATTRIBUTE_ACTION}-args`;
+    const ATTRIBUTE_ACTION_ARGS_SENSITIVE = `${ATTRIBUTE_ACTION_ARGS}-sensitive`;
+    const ATTRIBUTE_ACTION_FLUSH = `${ATTRIBUTE_ACTION}-flush`;
 
-      if (!target) {
-        return;
-      }
+    type MutatorConfigType = {};
 
-      const action = (target as Element).getAttribute(
-        "data-w-mutator-action"
-      ) as keyof this;
-
-      const actionArgs = (target as Element).getAttribute(
-        "data-w-mutator-action-args"
-      );
-
-      const actionFlush = (target as Element).getAttribute(
-        "data-w-mutator-action-flush"
-      );
-
-      if (!actionFlush) {
-        event.preventDefault();
-      }
-
-      if (!this.supportedActions.includes(action as string)) {
-        return;
-      }
-
-      const actionFunc = this[action] as any;
-
-      if (actionFunc instanceof Function)
-        return actionFunc({
-          args: actionArgs,
-          event,
-        });
+    type MutatorPropsType = {
+      element: HTMLElement;
+      sessid: string;
+      config?: MutatorConfigType;
     };
 
-    isStringHTML = (string: string) => {
-      const doc = new DOMParser().parseFromString(string, "text/html");
-      return [...doc.body.childNodes].some((node) => node.nodeType === 1);
+    type _BitrixResponse = {
+      data: any;
+      status: "success" | "error";
+      errors: {
+        code: string;
+        message: string;
+        customData: string;
+      }[];
     };
 
-    renderString = ({
-      string,
-      container,
-      config,
-    }: {
-      string: string;
-      container: HTMLElement;
-      config: {
-        replace?: boolean;
-      };
-    }) => {
-      const replace = config.replace;
-      const templateElement = document.createElement("template");
-      templateElement.innerHTML = string;
-      const fragment = templateElement.content;
-      fragment.querySelectorAll("script").forEach((scriptTag) => {
-        const scriptParentNode = scriptTag.parentNode;
-        scriptParentNode?.removeChild(scriptTag);
-        const script = document.createElement("script");
-        script.text = scriptTag.text;
-        // Новое поведение для скриптов
-        if (scriptTag.id) {
-          script.id = scriptTag.id;
-        }
-        scriptParentNode?.append(script);
-      });
-      if (replace) {
-        // омг, фикс для старых браузеров сафари, кринге
-        if (!container.replaceChildren) {
-          container.innerHTML = "";
-          container.appendChild(fragment);
+    class Mutator {
+      sessid = "";
+
+      supportedActions = ["load"];
+
+      element: HTMLElement | null = null;
+
+      isLoading = false;
+
+      constructor({ element, sessid, config = {} }: MutatorPropsType) {
+        this.setSessid(sessid);
+        this.setElement(element);
+
+        document.removeEventListener("click", this.handleDocumentClick);
+        document.addEventListener("click", this.handleDocumentClick);
+      }
+
+      handleDocumentClick = (event: MouseEvent) => {
+        let { target } = event;
+
+        if (!target) {
           return;
         }
-        return container.replaceChildren(fragment);
-      }
 
-      return container.appendChild(fragment);
-    };
-
-    load = async ({ args, event }: { args: string | null; event: Event }) => {
-      if (event.target === this.element) {
-        // бесконечный цикл при вызове через событие instance
-        event.preventDefault();
-        return;
-      }
-
-      if (this.isLoading) return;
-
-      this.isLoading = true;
-
-      this.data = new FormData();
-
-      if (this.element.dataset.mutatorId) {
-        this.data.set("from", this.element.dataset.mutatorId);
-      }
-
-      if (args) {
-        this.data.set("params", args);
-      }
-
-      let dispatchedEvent = new CustomEvent("welpodron.mutator:load:before", {
-        bubbles: false,
-        cancelable: true,
-        detail: {
-          instance: this,
-        },
-      });
-
-      if (!this.element.dispatchEvent(dispatchedEvent)) {
-        this.isLoading = false;
-
-        let dispatchedEvent = new CustomEvent("welpodron.mutator:load:after", {
-          bubbles: false,
-          cancelable: false,
-          detail: {
-            instance: this,
-          },
-        });
-
-        this.element.dispatchEvent(dispatchedEvent);
-
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          "/bitrix/services/main/ajax.php?action=welpodron%3Amutator.Receiver.load",
-          {
-            method: "POST",
-            body: this.data,
-          }
+        target = (target as Element).closest(
+          `[${ATTRIBUTE_BASE_ID}="${this.element?.getAttribute(
+            ATTRIBUTE_BASE_ID
+          )}"][${ATTRIBUTE_CONTROL}][${ATTRIBUTE_ACTION}]`
         );
 
-        if (!response.ok) {
-          throw new Error(response.statusText);
+        if (!target) {
+          return;
         }
 
-        const bitrixResponse: _BitrixResponse = await response.json();
+        const action = (target as Element).getAttribute(
+          ATTRIBUTE_ACTION
+        ) as keyof this;
 
-        if (bitrixResponse.status === "error") {
-          console.error(bitrixResponse);
-        } else {
-          const { data: responseData } = bitrixResponse;
-          if (this.isStringHTML(responseData)) {
-            this.renderString({
+        const actionArgs = (target as Element).getAttribute(
+          ATTRIBUTE_ACTION_ARGS
+        );
+
+        const actionArgsSensitive = (target as Element).getAttribute(
+          ATTRIBUTE_ACTION_ARGS_SENSITIVE
+        );
+
+        if (!actionArgs && !actionArgsSensitive) {
+          return;
+        }
+
+        const actionFlush = (target as Element).getAttribute(
+          ATTRIBUTE_ACTION_FLUSH
+        );
+
+        if (!actionFlush) {
+          event.preventDefault();
+        }
+
+        if (!this.supportedActions.includes(action as string)) {
+          return;
+        }
+
+        const actionFunc = this[action] as any;
+
+        if (actionFunc instanceof Function)
+          return actionFunc({
+            args: actionArgs,
+            argsSensitive: actionArgsSensitive,
+            event,
+          });
+      };
+
+      setSessid = (sessid: string) => {
+        this.sessid = sessid;
+      };
+
+      setElement = (element: HTMLElement) => {
+        this.element = element;
+      };
+
+      load = async ({
+        args,
+        argsSensitive,
+        event,
+      }: {
+        args: string | null;
+        argsSensitive: string | null;
+        event: Event;
+      }) => {
+        if (this.isLoading) {
+          return;
+        }
+
+        this.isLoading = true;
+
+        const controls = document.querySelectorAll(
+          `[${ATTRIBUTE_ACTION_ARGS}="${args}"][${ATTRIBUTE_ACTION}][${ATTRIBUTE_CONTROL}]`
+        );
+
+        controls.forEach((control) => {
+          control.setAttribute("disabled", "");
+        });
+
+        const data = new FormData();
+
+        const from = this.element?.getAttribute(ATTRIBUTE_BASE_ID);
+
+        if (from) {
+          data.set("from", from);
+        }
+
+        data.set("sessid", this.sessid);
+        data.set("args", args as any);
+        data.set("argsSensitive", argsSensitive as any);
+
+        let dispatchedEvent = new CustomEvent(EVENT_LOAD_BEFORE, {
+          bubbles: true,
+          cancelable: true,
+        });
+
+        if (!this.element?.dispatchEvent(dispatchedEvent)) {
+          controls.forEach((control) => {
+            control.removeAttribute("disabled");
+          });
+
+          dispatchedEvent = new CustomEvent(EVENT_LOAD_AFTER, {
+            bubbles: true,
+            cancelable: false,
+          });
+
+          this.element?.dispatchEvent(dispatchedEvent);
+
+          this.isLoading = false;
+
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "/bitrix/services/main/ajax.php?action=welpodron%3Amutator.Receiver.load",
+            {
+              method: "POST",
+              body: data,
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(response.statusText);
+          }
+
+          const bitrixResponse: _BitrixResponse = await response.json();
+
+          if (bitrixResponse.status === "error") {
+            console.error(bitrixResponse);
+
+            const error = bitrixResponse.errors[0];
+
+            (window as any).welpodron.templater.renderHTML({
+              string: error.message,
+              container: this.element as HTMLElement,
+              config: {
+                replace: true,
+              },
+            });
+          } else {
+            const { data: responseData } = bitrixResponse;
+
+            (window as any).welpodron.templater.renderHTML({
               string: responseData,
-              container: this.element,
+              container: this.element as HTMLElement,
               config: {
                 replace: true,
               },
             });
           }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          controls.forEach((control) => {
+            control.removeAttribute("disabled");
+          });
+
+          dispatchedEvent = new CustomEvent(EVENT_LOAD_AFTER, {
+            bubbles: true,
+            cancelable: false,
+          });
+
+          this.element.dispatchEvent(dispatchedEvent);
+
+          this.isLoading = false;
         }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        this.isLoading = false;
+      };
+    }
 
-        let dispatchedEvent = new CustomEvent("welpodron.mutator:load:after", {
-          bubbles: false,
-          cancelable: false,
-          detail: {
-            instance: this,
-          },
-        });
-
-        this.element.dispatchEvent(dispatchedEvent);
-      }
-    };
+    (window as any).welpodron.mutator = Mutator;
   }
-
-  (window as any).welpodron.mutator = Mutator;
 })();
