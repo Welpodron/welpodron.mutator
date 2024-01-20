@@ -45,7 +45,11 @@ class Receiver extends Controller
             $arParams = [];
 
             if ($arDataRaw['args']) {
-                $arParams['ARGS'] = JSON::decode($arDataRaw['args']);
+                try {
+                    $arParams['ARGS'] = JSON::decode($arDataRaw['args']);
+                } catch (\Throwable $th) {
+                    $arParams['ARGS'] = [];
+                }
             }
 
             if ($arDataRaw['argsSensitive']) {
@@ -61,7 +65,7 @@ class Receiver extends Controller
             return Utils::getMutationContent($path, $arParams, $from);
         } catch (\Throwable $th) {
             if (CurrentUser::get()->isAdmin()) {
-                $this->addError(new Error($th->getMessage(), $th->getCode()));
+                $this->addError(new Error($th->getMessage(), $th->getCode(), $th->getTraceAsString()));
                 return;
             }
 

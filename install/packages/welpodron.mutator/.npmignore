@@ -1,0 +1,9 @@
+node_modules/
+tsconfig.*
+ts/
+*.tgz
+*.min.*
+*.test.*
+*.mjs
+jest.config.js
+jest.setup.ts

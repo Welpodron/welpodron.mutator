@@ -1,19 +1,27 @@
 {
   "name": "welpodron.mutator",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
+  "version": "2.0.0",
+  "description": "Данный модуль предназначен для работы с мутируемыми включаемыми областями:\r - \"ленивое\" подключение включаемой области с возможностью обработки стилей и скриптов компонентов внутри данной области, а также общих дополнительных стилей и скриптов, подключенных внутри области",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:package": "cd ./install/packages/welpodron.mutator && npm install && npm run compile",
+    "build:module": "node build.mjs",
+    "build": "npm run build:package && npm run build:module"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Welpodron/welpodron.mutator.git"
+  },
+  "keywords": [
+    "bitrix"
+  ],
+  "author": "welpodron",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Welpodron/welpodron.mutator/issues"
+  },
+  "homepage": "https://github.com/Welpodron/welpodron.mutator#readme",
   "devDependencies": {
-    "typescript": "^5.1.6",
-    "uglify-js": "^3.17.4"
+    "archiver": "^6.0.1",
+    "fast-glob": "^3.3.2"
   }
 }

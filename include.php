@@ -3,7 +3,7 @@
 use Bitrix\Main\Loader;
 
 CJSCore::RegisterExt('welpodron.mutator', [
-    'js' => '/bitrix/js/welpodron.mutator/script.js',
+    'js' => '/local/packages/welpodron.mutator/iife/mutator/index.js',
     'skip_core' => true,
     'rel' => ['welpodron.core.templater'],
 ]);

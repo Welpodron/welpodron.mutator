@@ -10,6 +10,7 @@ use Bitrix\Main\Service\GeoIp\Manager;
 class welpodron_mutator extends CModule
 {
     var $MODULE_ID = 'welpodron.mutator';
+
     private $DEFAULT_OPTIONS = [];
 
     public function InstallOptions()
@@ -45,8 +46,8 @@ class welpodron_mutator extends CModule
         global $APPLICATION;
 
         try {
-            if (!CopyDirFiles(__DIR__ . '/js/', Application::getDocumentRoot() . '/bitrix/js', true, true)) {
-                $APPLICATION->ThrowException('Не удалось скопировать js');
+            if (!CopyDirFiles(__DIR__ . '/packages/', Application::getDocumentRoot() . '/local/packages', true, true)) {
+                $APPLICATION->ThrowException('Не удалось скопировать используемый модулем пакет');
                 return false;
             };
         } catch (\Throwable $th) {
@@ -59,7 +60,7 @@ class welpodron_mutator extends CModule
 
     public function UnInstallFiles()
     {
-        Directory::deleteDirectory(Application::getDocumentRoot() . '/bitrix/js/' . $this->MODULE_ID);
+        Directory::deleteDirectory(Application::getDocumentRoot() . '/local/packages/' . $this->MODULE_ID);
     }
 
     public function DoInstall()
@@ -108,7 +109,11 @@ class welpodron_mutator extends CModule
         $this->PARTNER_NAME = 'Welpodron';
         $this->PARTNER_URI = 'https://github.com/Welpodron';
 
-        $this->MODULE_VERSION = '1.0.0';
+        $arModuleVersion = [];
+        include(__DIR__ . "/version.php");
+
+        $this->MODULE_VERSION = $arModuleVersion["VERSION"];
+        $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 
         $this->DEFAULT_OPTIONS = [
             'KEY' => md5(Manager::getRealIp() . bitrix_sessid()),
