@@ -75,7 +75,11 @@ class Utils
             }
         }
 
-        $stringList[] = Asset::getInstance()->showFilesList();
+        //! Bitrix 2016 Support 
+        try {
+            $stringList[] = Asset::getInstance()->showFilesList();
+        } catch (\Throwable $th) {
+        }
 
         $cssList = CUtil::PhpToJSObject($cssList, false, true);
         $jsList = CUtil::PhpToJSObject($jsList, false, true);
@@ -320,7 +324,7 @@ class Utils
             window.mutating.resolve();
         })();
         </script>
-        MUTATOR_SCRIPT;
+MUTATOR_SCRIPT;
 
         $templateIncludeResult = $mutatorScript . $templateIncludeResult;
 

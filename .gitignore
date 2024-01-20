@@ -1,2 +1,15 @@
+.vscode
 node_modules
-package-lock.json
+*.cache
+tests
+.build
+*.tgz
+*.tsbuildinfo
+*.min.css
+*.min.js
+*.map
+*.d.ts
+iife
+es
+cjs
+types

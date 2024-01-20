@@ -10,15 +10,15 @@
   };
 
   const getExtension = (str: string) => {
-    const items = str.split("?")[0].split(".");
+    const items = str.split('?')[0].split('.');
     return items[items.length - 1].toLowerCase();
   };
 
   const getUrl = (url: string) => {
-    let _url = url.replace(/^(http[s]*:)*\/\/[^\/]+/i, "");
-    _url = _url.replace(/\?[0-9]*$/, "");
+    let _url = url.replace(/^(http[s]*:)*\/\/[^\/]+/i, '');
+    _url = _url.replace(/\?[0-9]*$/, '');
 
-    let minPos = _url.indexOf(".min");
+    let minPos = _url.indexOf('.min');
 
     return minPos >= 0
       ? _url.substr(0, minPos) + _url.substr(minPos + 4)
@@ -29,11 +29,11 @@
     const url = getUrl(fileSrc);
 
     // TODO! Тут нужно уменьшить количество циклов, нужен такой css селектор, который сразу выбирает все теги link c не пустым href
-    const links = document.getElementsByTagName("link");
+    const links = document.getElementsByTagName('link');
 
     if (links.length > 0) {
       for (let i = 0; i < links.length; i++) {
-        const href = links[i].getAttribute("href");
+        const href = links[i].getAttribute('href');
 
         if (href && href.trim().length > 0) {
           if (getUrl(href) === url) {
@@ -50,11 +50,11 @@
     const url = getUrl(fileSrc);
 
     // TODO! Тут нужно уменьшить количество циклов, нужен такой css селектор, который сразу выбирает все теги script с не пустым src
-    const scripts = document.getElementsByTagName("script");
+    const scripts = document.getElementsByTagName('script');
 
     if (scripts.length > 0) {
       for (let i = 0; i < scripts.length; i++) {
-        const src = scripts[i].getAttribute("src");
+        const src = scripts[i].getAttribute('src');
 
         if (src && src.trim().length > 0) {
           if (getUrl(src) === url) {
@@ -87,13 +87,13 @@
 
     let element: HTMLScriptElement | HTMLLinkElement | null = null;
 
-    if (ext === "css") {
-      element = document.createElement("link");
-      element.rel = "stylesheet";
+    if (ext === 'css') {
+      element = document.createElement('link');
+      element.rel = 'stylesheet';
       element.href = url;
     } else {
-      if (ext === "js") {
-        element = document.createElement("script");
+      if (ext === 'js') {
+        element = document.createElement('script');
         element.src = url;
         element.defer = false;
         element.async = false;
@@ -131,12 +131,12 @@
         loaded: false,
       };
 
-      if (asset.ext === "css") {
+      if (asset.ext === 'css') {
         if (isCSSFileLoaded(asset.url)) {
           asset.loaded = true;
         }
       } else {
-        if (asset.ext === "js") {
+        if (asset.ext === 'js') {
           if (isScriptFileLoaded(asset.url)) {
             asset.loaded = true;
           }
@@ -193,9 +193,9 @@
       let skipTag = false;
       if ((matchType = matchScript[1].match(regulars.script_type)) !== null) {
         if (
-          matchType[1] == "text/html" ||
-          matchType[1] == "text/template" ||
-          matchType[1] == "extension/settings"
+          matchType[1] == 'text/html' ||
+          matchType[1] == 'text/template' ||
+          matchType[1] == 'extension/settings'
         ) {
           skipTag = true;
         }
@@ -210,7 +210,7 @@
         textIndexes.push([lastIndex, matchScript.index - lastIndex]);
 
         let bRunFirst =
-          scriptsRunFirst || matchScript[1].indexOf("bxrunfirst") !== -1;
+          scriptsRunFirst || matchScript[1].indexOf('bxrunfirst') !== -1;
 
         if ((matchSrc = matchScript[1].match(regulars.script_src)) !== null) {
           scripts.push({
@@ -234,7 +234,7 @@
       lastIndex,
       lastIndex === 0 ? data.length : data.length - lastIndex,
     ]);
-    let pureData = "";
+    let pureData = '';
     for (let i = 0, length = textIndexes.length; i < length; i++) {
       if (data && data.substr) {
         pureData += data.substr(textIndexes[i][0], textIndexes[i][1]);
@@ -250,7 +250,7 @@
         styles.push(matchHref[1]);
       }
 
-      pureData = pureData.replace(matchStyle[0], "");
+      pureData = pureData.replace(matchStyle[0], '');
     }
 
     return { HTML: pureData, SCRIPT: scripts, STYLE: styles };
@@ -269,10 +269,10 @@
   }
 
   if (Array.isArray(stringList) && stringList.length > 0) {
-    const parsedHtml = _parseHTML(stringList.join(""));
+    const parsedHtml = _parseHTML(stringList.join(''));
 
     const externalCss = parsedHtml.STYLE.reduce((acc, item) => {
-      if (item && item !== "") {
+      if (item && item !== '') {
         acc.push(item);
       }
       return acc;
@@ -293,7 +293,7 @@
     }, [] as string[]);
 
     if (parsedHtml.HTML.length) {
-      document.head.insertAdjacentHTML("beforeend", parsedHtml.HTML);
+      document.head.insertAdjacentHTML('beforeend', parsedHtml.HTML);
     }
 
     await loadAssets(externalCss);
@@ -301,9 +301,9 @@
 
     inlineJs.forEach((data) => {
       if (data) {
-        const script = document.createElement("script");
+        const script = document.createElement('script');
 
-        script.type = "text/javascript";
+        script.type = 'text/javascript';
 
         script.appendChild(document.createTextNode(data));
 
