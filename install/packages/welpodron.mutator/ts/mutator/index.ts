@@ -160,10 +160,12 @@ class Mutator {
       data.set('from', from);
     }
 
+    /* eslint-disable */
     // composite and deep cache fix
     if ((window as any).BX && (window as any).BX.bitrix_sessid) {
       this.sessid = (window as any).BX.bitrix_sessid();
     }
+    /* eslint-enable */
 
     data.set('sessid', this.sessid);
 
