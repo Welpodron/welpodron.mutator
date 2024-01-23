@@ -10,20 +10,31 @@ const __dirname = path.dirname(__filename);
 const MODULE_NAME = path.basename(__dirname);
 
 const build = () => {
-  const entries = fg.globSync(['**', '.settings.php'], {
-    ignore: [
-      '**/node_modules/**',
-      '**/cjs/**',
-      '**/types/**',
-      '**/iife/**/*.map',
-      '**/*.json',
-      '**/*.md',
-      '**/*.mjs',
-      '**/jest.*',
-      '**/*.test.*',
-      '**/LICENSE',
+  const entries = fg.globSync(
+    [
+      '**',
+      '.settings.php',
+      '**/.parameters.php',
+      '**/.description.php',
+      '**/.tooltips.php',
+      '**/.default/**',
     ],
-  });
+    {
+      ignore: [
+        '**/node_modules/**',
+        '**/tests/**',
+        '**/cjs/**',
+        '**/types/**',
+        '**/iife/**/*.map',
+        '**/*.json',
+        '**/*.md',
+        '**/*.mjs',
+        '**/jest.*',
+        '**/*.test.*',
+        '**/LICENSE',
+      ],
+    }
+  );
 
   if (!entries.length) {
     return console.error('Не найдены файлы для сборки');

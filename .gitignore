@@ -4,6 +4,7 @@ node_modules
 tests
 .build
 *.tgz
+*.zip
 *.tsbuildinfo
 *.min.css
 *.min.js

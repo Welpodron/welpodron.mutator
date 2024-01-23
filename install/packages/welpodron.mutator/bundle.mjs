@@ -147,7 +147,8 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
           base: '',
           ext: 'js',
         }),
-        sourcemap: true,
+        //! Велл, у битрикса куча рофлов про сорс мапы при объединении JS файлов и их сжатии, лучше просто отключить и создавать ток для минификации
+        sourcemap: false,
         globals: { 'welpodron.core': 'window.welpodron' },
       });
     } catch (error) {

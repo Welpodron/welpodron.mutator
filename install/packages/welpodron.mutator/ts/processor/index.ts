@@ -1,3 +1,5 @@
+/*КОД НИЖЕ ПРЕДНАЗНАЧЕН ТОЛЬКО ДЛЯ ГЕНЕРАЦИИ СКРИПТА МУТАТОРА ВНУТРИ CONTROLLER*/
+/* eslint-disable */
 (async () => {
   const cssList: string[] = [];
   const jsList: string[] = [];
@@ -315,3 +317,4 @@
 
   (window as any).mutating.resolve();
 })();
+/* eslint-enable */
