@@ -30,7 +30,7 @@ type MutatorPropsType = {
 };
 
 type _BitrixResponseType = {
-  data: any;
+  data: string;
   status: 'success' | 'error';
   errors: {
     code: string;
@@ -114,7 +114,7 @@ class Mutator {
       return;
     }
 
-    const actionFunc = this[action] as any;
+    const actionFunc = this[action];
 
     if (actionFunc instanceof Function)
       return actionFunc({
@@ -127,7 +127,6 @@ class Mutator {
   load = async ({
     args,
     argsSensitive,
-    event,
   }: {
     args: string | null;
     argsSensitive: string | null;
@@ -161,10 +160,12 @@ class Mutator {
       data.set('from', from);
     }
 
+    /* eslint-disable */
     // composite and deep cache fix
     if ((window as any).BX && (window as any).BX.bitrix_sessid) {
       this.sessid = (window as any).BX.bitrix_sessid();
     }
+    /* eslint-enable */
 
     data.set('sessid', this.sessid);
 

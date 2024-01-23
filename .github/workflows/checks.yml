@@ -1,0 +1,33 @@
+name: 'Базовые проверки кода'
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+env:
+  MODULE_NAME: welpodron.mutator
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: './install/packages/${{ env.MODULE_NAME }}'
+
+    steps:
+      - name: Repo checkout
+        uses: actions/checkout@v4
+      - name: Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+      - name: Установка Node.js зависимостей
+        run: npm install
+      - name: Проверка проекта
+        run: npm run lint
