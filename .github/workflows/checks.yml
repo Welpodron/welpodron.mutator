@@ -22,15 +22,12 @@ jobs:
     steps:
       - name: Repo checkout
         uses: actions/checkout@v4
-
       - name: Установка Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: 18
           cache: 'npm'
-
       - name: Установка Node.js зависимостей
         run: npm install
-
       - name: Проверка проекта
         run: npm run lint
