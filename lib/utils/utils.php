@@ -89,6 +89,19 @@ class Utils
         <script>
         "use strict";
         (async () => {
+            const deferred = () => {
+                let resolver, promise;
+                promise = new Promise((resolve, reject) => {
+                    resolver = resolve;
+                });
+                promise.resolve = resolver;
+                return promise;
+            };
+            if (window.mutating) {
+                await window.mutating;
+            } else {
+                window.mutating = deferred();
+            }
             const cssList = {$cssList};
             const jsList = {$jsList};
             const stringList = {$stringList};
@@ -133,14 +146,6 @@ class Utils
                     }
                 }
                 return false;
-            };
-            const deferred = () => {
-                let resolver, promise;
-                promise = new Promise((resolve, reject) => {
-                    resolver = resolve;
-                });
-                promise.resolve = resolver;
-                return promise;
             };
             const loadAsset = async ({ url, ext }) => {
                 const promise = deferred();
@@ -279,7 +284,6 @@ class Utils
                 }
                 return { HTML: pureData, SCRIPT: scripts, STYLE: styles };
             };
-            window.mutating = deferred();
             if (Array.isArray(cssList) && cssList.length > 0) {
                 await loadAssets(cssList);
             }

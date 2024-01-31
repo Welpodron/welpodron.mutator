@@ -1,6 +1,27 @@
 /*КОД НИЖЕ ПРЕДНАЗНАЧЕН ТОЛЬКО ДЛЯ ГЕНЕРАЦИИ СКРИПТА МУТАТОРА ВНУТРИ CONTROLLER*/
 /* eslint-disable */
 (async () => {
+  const deferred = <T = unknown>(): Promise<T> & {
+    resolve: (value?: T | PromiseLike<T>) => void;
+  } => {
+    let resolver, promise;
+    promise = new Promise<T>((resolve, reject) => {
+      resolver = resolve;
+    });
+    (
+      promise as Promise<T> & { resolve: (value: T | PromiseLike<T>) => void }
+    ).resolve = resolver as unknown as (value: T | PromiseLike<T>) => void;
+    return promise as Promise<T> & {
+      resolve: (value?: T | PromiseLike<T>) => void;
+    };
+  };
+
+  if ((window as any).mutating) {
+    await (window as any).mutating;
+  } else {
+    (window as any).mutating = deferred();
+  }
+
   const cssList: string[] = [];
   const jsList: string[] = [];
   const stringList: string[] = [];
@@ -67,21 +88,6 @@
     }
 
     return false;
-  };
-
-  const deferred = <T = unknown>(): Promise<T> & {
-    resolve: (value?: T | PromiseLike<T>) => void;
-  } => {
-    let resolver, promise;
-    promise = new Promise<T>((resolve, reject) => {
-      resolver = resolve;
-    });
-    (
-      promise as Promise<T> & { resolve: (value: T | PromiseLike<T>) => void }
-    ).resolve = resolver as unknown as (value: T | PromiseLike<T>) => void;
-    return promise as Promise<T> & {
-      resolve: (value?: T | PromiseLike<T>) => void;
-    };
   };
 
   const loadAsset = async ({ url, ext }: AssetType) => {
@@ -257,10 +263,6 @@
 
     return { HTML: pureData, SCRIPT: scripts, STYLE: styles };
   };
-
-  //! TODO: А что если уже запущена мутация? Я думаю, стоит проверять наличие переменной window.mutating
-  //! по поводу реализации написано внутри контроллера
-  (window as any).mutating = deferred();
 
   if (Array.isArray(cssList) && cssList.length > 0) {
     await loadAssets(cssList);
