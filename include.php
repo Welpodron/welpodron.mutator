@@ -2,6 +2,8 @@
 
 use Bitrix\Main\Loader;
 
+Loader::includeModule("welpodron.core");
+
 CJSCore::RegisterExt('welpodron.mutator', [
     'js' => '/local/packages/welpodron.mutator/iife/mutator/index.js',
     'skip_core' => true,
